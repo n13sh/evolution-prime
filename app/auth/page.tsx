@@ -206,28 +206,6 @@ function AuthContent() {
             </Button>
           </form>
 
-          {/* Demo accounts */}
-          <div className="mt-6 pt-5 border-t border-white/5">
-            <p className="text-xs text-[--text-muted] text-center mb-3">Quick demo access</p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: 'Admin', email: 'admin@evoprime.com', password: 'admin123' },
-                { label: 'Coach', email: 'coach@evoprime.com', password: 'coach123' },
-                { label: 'Athlete', email: 'trainee@evoprime.com', password: 'trainee123' },
-              ].map(demo => (
-                <button
-                  key={demo.label}
-                  onClick={() => {
-                    setMode('login');
-                    setForm({ email: demo.email, password: demo.password, displayName: '' });
-                  }}
-                  className="glass py-2 px-3 rounded-lg text-xs font-semibold text-[--text-muted] hover:text-gold transition-colors text-center"
-                >
-                  {demo.label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </motion.div>
     </div>
