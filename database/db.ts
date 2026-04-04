@@ -12,10 +12,14 @@ function createConnection() {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
+  // port 6543 = Supabase transaction pooler (needs prepare:false)
+  // port 5432 = direct connection (supports prepared statements)
+  const isPooler = connectionString.includes(':6543');
+
   return postgres(connectionString, {
-    prepare: false,       // required for Supabase transaction pooler
+    prepare: isPooler ? false : true,
     ssl: 'require',
-    max: 1,               // serverless: one connection per function instance
+    max: 2,
     idle_timeout: 20,
     connect_timeout: 10,
   });
