@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gold: #F5C518;
+  --gold-dim: #C49D10;
+  --gold-light: #FFD94A;
+  --crimson: #DC143C;
+  --crimson-dim: #A00E2B;
+  --crimson-light: #FF3358;
+  --bg-base: #0A0A0F;
+  --bg-surface: #111118;
+  --bg-elevated: #1A1A24;
+  --bg-card: #1E1E2E;
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-hover: rgba(255, 255, 255, 0.07);
+  --text-primary: #F0F0F5;
+  --text-muted: #8888A0;
+  --text-subtle: #5555688;
+  --radius-card: 16px;
+  --blur-glass: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Selection */
+::selection { background: rgba(245, 197, 24, 0.25); color: var(--text-primary); }
+
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--blur-glass));
+    -webkit-backdrop-filter: blur(var(--blur-glass));
+  }
+
+  .glass-hover {
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .glass-hover:hover {
+    background: var(--glass-hover);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 20px rgba(245, 197, 24, 0.25), 0 0 40px rgba(245, 197, 24, 0.1);
+  }
+
+  .crimson-glow {
+    box-shadow: 0 0 20px rgba(220, 20, 60, 0.25), 0 0 40px rgba(220, 20, 60, 0.1);
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-crimson {
+    background: linear-gradient(135deg, var(--crimson-light), var(--crimson));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-radial-gold {
+    background: radial-gradient(ellipse at center, rgba(245,197,24,0.08) 0%, transparent 70%);
+  }
+
+  .bg-radial-crimson {
+    background: radial-gradient(ellipse at center, rgba(220,20,60,0.08) 0%, transparent 70%);
+  }
+
+  .border-gold {
+    border-color: rgba(245, 197, 24, 0.3);
+  }
+
+  .border-crimson {
+    border-color: rgba(220, 20, 60, 0.3);
+  }
+
+  .noise {
+    position: relative;
+  }
+  .noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gold text-black font-semibold px-6 py-3 rounded-xl transition-all duration-200;
+    @apply hover:bg-gold-light hover:shadow-[0_0_20px_rgba(245,197,24,0.4)] active:scale-95;
+  }
+
+  .btn-crimson {
+    @apply bg-crimson text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200;
+    @apply hover:bg-crimson-light hover:shadow-[0_0_20px_rgba(220,20,60,0.4)] active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply glass glass-hover text-[--text-primary] font-medium px-6 py-3 rounded-xl transition-all duration-200;
+    @apply active:scale-95;
+  }
+
+  .input-field {
+    @apply glass w-full px-4 py-3 rounded-xl text-[--text-primary] placeholder:text-[--text-muted];
+    @apply outline-none focus:border-[rgba(245,197,24,0.4)] focus:ring-1 focus:ring-[rgba(245,197,24,0.2)];
+    @apply transition-all duration-200;
+  }
+
+  .card {
+    @apply glass rounded-2xl p-6;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .badge-green {
+    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .badge-red {
+    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
+    background: rgba(220, 20, 60, 0.15);
+    color: #ff6b8a;
+    border: 1px solid rgba(220, 20, 60, 0.2);
+  }
+
+  .badge-gold {
+    @apply text-xs font-semibold px-2 py-0.5 rounded-full;
+    background: rgba(245, 197, 24, 0.15);
+    color: #F5C518;
+    border: 1px solid rgba(245, 197, 24, 0.2);
+  }
+}
+
+/* Recharts custom styles */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  color: var(--text-primary) !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255,255,255,0.05) !important;
+}
+
+.recharts-text { fill: var(--text-muted) !important; }
