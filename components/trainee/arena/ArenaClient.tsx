@@ -31,9 +31,8 @@ export function ArenaClient({ plans, activeSession: initialSession, traineeId }:
   const isActive = store.activeSessionId !== null;
 
   // Rest timer
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (isResting && restTime > 0) {
+    if (isResting) {
       timerRef.current = setInterval(() => {
         setRestTime(prev => {
           if (prev <= 1) {
