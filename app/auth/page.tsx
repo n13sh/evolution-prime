@@ -3,10 +3,9 @@ import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Zap, Mail, User } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { useAuthStore } from '@/store/auth-store';
 import { useUIStore } from '@/store/ui-store';
 
 function AuthContent() {
@@ -18,17 +17,24 @@ function AuthContent() {
   const [role, setRole] = useState<'trainee' | 'coach'>(
     searchParams.get('role') === 'coach' ? 'coach' : 'trainee'
   );
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ email: '', password: '', displayName: '' });
+  const [form, setForm] = useState({ email: '', displayName: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const setUser = useAuthStore(s => s.setUser);
   const pushToast = useUIStore(s => s.pushToast);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    if (!form.email) {
+      setErrors({ email: 'Email is required' });
+      return;
+    }
+    if (mode === 'register' && !form.displayName) {
+      setErrors({ displayName: 'Name is required' });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -41,13 +47,17 @@ function AuthContent() {
       const data = await res.json();
 
       if (!res.ok) {
-        pushToast({ type: 'error', title: data.error || 'Identity Challenge Failed' });
+        pushToast({ type: 'error', title: data.error || 'Failed to send access code' });
         return;
       }
 
-      pushToast({ type: 'success', title: 'Neural Signal Sent (Check Email)' });
-      
-      // Store draft profile in session/query for verification step
+      // Show hint for dev mode
+      if (data.devMode) {
+        pushToast({ type: 'info', title: 'Dev Mode: Check your terminal for the access code' });
+      } else {
+        pushToast({ type: 'success', title: '📨 Access code sent — check your email!' });
+      }
+
       const params = new URLSearchParams({
         email: form.email,
         role,
@@ -55,7 +65,7 @@ function AuthContent() {
       });
       router.push(`/auth/verify?${params.toString()}`);
     } catch {
-      pushToast({ type: 'error', title: 'Network sequence interrupted.' });
+      pushToast({ type: 'error', title: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -64,9 +74,9 @@ function AuthContent() {
   return (
     <div className="min-h-screen bg-surface-base flex items-center justify-center relative overflow-hidden px-4">
       {/* Background */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(245,197,24,0.06),transparent)]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gold/3 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold/4 rounded-full blur-[120px]" />
       </div>
 
       <motion.div
@@ -77,7 +87,7 @@ function AuthContent() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(245,197,24,0.3)]">
               <Zap className="w-5 h-5 text-black" fill="black" />
             </div>
             <span className="font-display font-bold text-xl">
@@ -85,23 +95,71 @@ function AuthContent() {
             </span>
           </Link>
           <h1 className="font-display font-bold text-2xl text-[--text-primary] mb-1">
-            {mode === 'login' ? 'Identity Authentication' : 'Begin Evolution'}
+            {mode === 'login' ? 'Welcome Back' : 'Start Your Evolution'}
           </h1>
           <p className="text-sm text-[--text-muted]">
-            {mode === 'login' ? 'Secure entrance via neural signal' : 'Create your unique signature in the elite'}
+            {mode === 'login' ? 'Enter your email to receive an access code' : 'Create your account — no password needed'}
           </p>
         </div>
 
         {/* Card */}
-        <div
-          className="glass rounded-3xl p-8 shadow-2xl border-white/5"
-        >
+        <div className="glass rounded-3xl p-8 shadow-[0_24px_80px_rgba(0,0,0,0.6)] border border-white/5">
+          {/* Mode Toggle */}
+          <div className="flex glass rounded-xl p-1 mb-6">
+            {(['login', 'register'] as const).map(m => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  mode === m ? 'bg-gold text-black' : 'text-[--text-muted] hover:text-[--text-primary]'
+                }`}
+              >
+                {m === 'login' ? 'Sign In' : 'Sign Up'}
+              </button>
+            ))}
+          </div>
+
+          {/* Role Selector (register only) */}
+          <AnimatePresence>
+            {mode === 'register' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden mb-5"
+              >
+                <p className="text-xs text-[--text-muted] mb-2 font-medium">I am a...</p>
+                <div className="flex gap-3">
+                  {([
+                    { value: 'trainee', label: 'Athlete', emoji: '🏋️' },
+                    { value: 'coach', label: 'Coach', emoji: '🎯' },
+                  ] as const).map(r => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => setRole(r.value)}
+                      className={`flex-1 glass py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                        role === r.value
+                          ? 'border-gold/40 text-gold bg-gold/8'
+                          : 'border-white/5 text-[--text-muted] hover:text-[--text-primary]'
+                      }`}
+                    >
+                      <span className="mr-2">{r.emoji}</span>
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {mode === 'register' && (
               <Input
-                label="Signature (Name)"
-                placeholder="Ex: John Proto"
+                label="Full Name"
+                placeholder="Your name"
                 icon={<User className="w-4 h-4" />}
                 value={form.displayName}
                 onChange={e => setForm(p => ({ ...p, displayName: e.target.value }))}
@@ -110,9 +168,9 @@ function AuthContent() {
               />
             )}
             <Input
-              label="Neural ID (Email)"
+              label="Email Address"
               type="email"
-              placeholder="id@evolution.prime"
+              placeholder="you@example.com"
               icon={<Mail className="w-4 h-4" />}
               value={form.email}
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
@@ -120,21 +178,19 @@ function AuthContent() {
               required
             />
 
-            {/* Mode toggle embedded below for cleaner look */}
-            <div className="flex items-center justify-between px-1">
-              <button 
-                type="button" 
-                onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                className="text-[10px] font-black uppercase tracking-widest text-[--text-muted] hover:text-gold transition-colors"
-              >
-                {mode === 'login' ? 'No Signature? Register' : 'Already Linked? Login'}
-              </button>
-            </div>
-
-            <Button type="submit" variant="primary" loading={loading} className="w-full h-14 uppercase tracking-[0.2em] font-black shadow-gold/5">
-              {loading ? 'Dispatching Signal...' : 'Send Access Key'}
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+              className="w-full h-14 mt-1 font-black uppercase tracking-[0.15em] shadow-xl shadow-gold/10"
+            >
+              {loading ? 'Sending Code...' : mode === 'login' ? '→ Send Access Code' : `→ Register as ${role === 'coach' ? 'Coach' : 'Athlete'}`}
             </Button>
           </form>
+
+          <p className="text-center mt-5 text-[10px] text-[--text-muted] font-medium">
+            A 6-digit code will be sent to your email.
+          </p>
         </div>
       </motion.div>
     </div>
