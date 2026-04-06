@@ -40,58 +40,100 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-24 relative">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="pricing" className="py-32 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(220,20,60,0.03),transparent)] pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-6 relative">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
+          viewport={{ once: true, margin: '-100px' }}
+          className="text-center mb-20"
         >
-          <p className="text-gold text-sm font-semibold tracking-widest uppercase mb-4">Pricing</p>
-          <h2 className="font-display font-black text-4xl md:text-5xl text-[--text-primary] mb-4">
-            Invest in Your <span className="text-gradient-crimson">Evolution</span>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-block px-4 py-1.5 glass rounded-full border border-crimson/20 mb-6"
+          >
+            <span className="text-[10px] font-bold text-crimson-light tracking-widest uppercase">Investment in Self</span>
+          </motion.div>
+          <h2 className="font-display font-black text-5xl md:text-7xl text-[--text-primary] mb-8 leading-[0.9] tracking-tighter">
+            Choose Your <span className="text-gradient-crimson italic">Evolution</span>
           </h2>
-          <p className="text-[--text-muted] text-lg max-w-xl mx-auto">
-            No hidden fees. Cancel anytime. Every plan comes with a 14-day free trial.
+          <p className="text-[--text-muted] text-lg md:text-xl max-w-xl mx-auto font-light leading-relaxed">
+            No hidden fees. Total transparency. Every plan is built to push your limits.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ 
+                duration: 0.8, 
+                delay: i * 0.15, 
+                ease: [0.16, 1, 0.3, 1] 
+              }}
+              className="group h-full"
             >
               <GlassCard
                 glow={plan.highlight ? 'gold' : null}
-                className={`p-6 h-full flex flex-col ${plan.highlight ? 'border-gold/30' : ''}`}
+                className={`p-8 h-full flex flex-col relative transition-all duration-500 bg-white/2 border-white/5 ${
+                  plan.highlight 
+                    ? 'border-gold/40 shadow-[0_40px_80px_-20px_rgba(245,197,24,0.15)] ring-1 ring-gold/20' 
+                    : 'hover:border-white/20'
+                }`}
+                hover
               >
                 {plan.badge && (
-                  <div className="inline-flex items-center gap-1.5 badge-gold mb-4 self-start">
-                    <Zap className="w-3 h-3" />
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    className="absolute -top-4 left-8 inline-flex items-center gap-1.5 bg-gold text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.1em] shadow-[0_8px_20px_rgba(245,197,24,0.3)] z-10"
+                  >
+                    <Zap className="w-3 h-3 fill-black" />
                     {plan.badge}
-                  </div>
+                  </motion.div>
                 )}
-                <h3 className="font-display font-bold text-xl text-[--text-primary] mb-1">{plan.name}</h3>
-                <p className="text-sm text-[--text-muted] mb-4">{plan.description}</p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="font-display font-black text-4xl text-[--text-primary]">{plan.price}</span>
-                  {plan.period && <span className="text-[--text-muted]">{plan.period}</span>}
+                
+                <div className="mb-10">
+                  <h3 className="font-display font-black text-2xl text-[--text-primary] mb-2 tracking-tight">{plan.name}</h3>
+                  <p className="text-xs text-[--text-muted]/60 font-bold uppercase tracking-widest">{plan.description}</p>
                 </div>
-                <ul className="flex flex-col gap-3 mb-8 flex-1">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-[--text-muted]">
-                      <Check className="w-4 h-4 text-gold flex-shrink-0" />
+
+                <div className="flex items-baseline gap-1 mb-10 group-hover:scale-105 transition-transform origin-left duration-500">
+                  <span className="font-display font-black text-6xl text-[--text-primary] tracking-tighter">{plan.price}</span>
+                  {plan.period && <span className="text-sm font-bold text-[--text-muted] tracking-wide mb-2 opacity-60">{plan.period}</span>}
+                </div>
+
+                <div className="space-y-4 mb-12 flex-1">
+                  <p className="text-[10px] font-black text-[--text-muted] uppercase tracking-[0.2em] mb-6 opacity-40">Features Included</p>
+                  {plan.features.map((f, idx) => (
+                    <motion.li 
+                      key={f}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 + idx * 0.05 }}
+                      className="flex items-center gap-3 text-sm text-[--text-muted] font-medium list-none group-hover:text-[--text-primary] transition-colors"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 text-gold" strokeWidth={3} />
+                      </div>
                       {f}
-                    </li>
+                    </motion.li>
                   ))}
-                </ul>
-                <Link href={plan.href}>
-                  <Button variant={plan.highlight ? 'primary' : 'ghost'} className="w-full">
+                </div>
+
+                <Link href={plan.href} className="mt-auto block">
+                  <Button 
+                    variant={plan.highlight ? 'primary' : 'ghost'} 
+                    className={`w-full h-14 font-black uppercase tracking-widest text-xs transition-all duration-500 ${
+                      plan.highlight ? 'shadow-xl shadow-gold/10 hover:shadow-gold/20' : ''
+                    }`}
+                  >
                     {plan.cta}
                   </Button>
                 </Link>

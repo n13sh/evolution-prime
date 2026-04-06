@@ -50,53 +50,80 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-24 relative">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,rgba(245,197,24,0.03),transparent)]" />
+    <section id="features" className="py-32 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(245,197,24,0.05),transparent)] pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 relative">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
+          viewport={{ once: true, margin: '-100px' }}
+          className="text-center mb-24"
         >
-          <p className="text-gold text-sm font-semibold tracking-widest uppercase mb-4">Platform Features</p>
-          <h2 className="font-display font-black text-4xl md:text-5xl text-[--text-primary] mb-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-block px-4 py-1.5 glass rounded-full border border-gold/20 mb-6"
+          >
+            <span className="text-[10px] font-bold text-gold tracking-widest uppercase">The Paradigm Shift</span>
+          </motion.div>
+          <h2 className="font-display font-black text-5xl md:text-7xl text-[--text-primary] mb-8 leading-[0.9] tracking-tighter">
             Everything You Need to<br />
-            <span className="text-gradient-gold">Dominate</span>
+            <span className="text-gradient-gold italic">Dominate</span>
           </h2>
-          <p className="text-[--text-muted] text-lg max-w-2xl mx-auto">
-            A complete fitness ecosystem designed around performance, data, and results.
+          <p className="text-[--text-muted] text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
+            A complete fitness ecosystem designed for those who measure progress in data and will.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ 
+                duration: 0.7, 
+                delay: i * 0.1, 
+                ease: [0.16, 1, 0.3, 1] 
+              }}
+              whileHover={{ y: -8, transition: { duration: 0.3 } }}
+              className="group"
             >
-              <GlassCard hover className="p-6 h-full">
-                <div className="flex items-start gap-4">
+              <GlassCard 
+                className="p-8 h-full relative overflow-hidden border border-white/5 bg-white/2 hover:bg-white/4 transition-colors"
+                hover
+              >
+                <div 
+                  className="absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity"
+                  style={{ background: feature.color }}
+                />
+                <div className="flex flex-col gap-6">
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${feature.color}18`, border: `1px solid ${feature.color}30` }}
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-2xl"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${feature.color}20, ${feature.color}05)`, 
+                      border: `1px solid ${feature.color}30` 
+                    }}
                   >
-                    <feature.icon className="w-6 h-6" style={{ color: feature.color }} />
+                    <feature.icon className="w-8 h-8" style={{ color: feature.color }} />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-[--text-primary]">{feature.title}</h3>
-                      <span
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: `${feature.color}18`, color: feature.color, border: `1px solid ${feature.color}25` }}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="font-display font-black text-2xl text-[--text-primary] tracking-tight">{feature.title}</h3>
+                    </div>
+                    <p className="text-sm md:text-base text-[--text-muted]/70 leading-relaxed font-medium mb-6">
+                      {feature.description}
+                    </p>
+                    <div className="flex items-center gap-2">
+                       <span
+                        className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest"
+                        style={{ background: `${feature.color}15`, color: feature.color, border: `1px solid ${feature.color}20` }}
                       >
                         {feature.badge}
                       </span>
                     </div>
-                    <p className="text-sm text-[--text-muted] leading-relaxed">{feature.description}</p>
                   </div>
                 </div>
               </GlassCard>

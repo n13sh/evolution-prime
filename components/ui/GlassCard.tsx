@@ -14,11 +14,11 @@ export function GlassCard({ children, className, glow, hover = false, onClick }:
     <div
       onClick={onClick}
       className={cn(
-        'glass rounded-2xl',
-        hover && 'glass-hover cursor-pointer',
+        'glass rounded-2xl md:rounded-3xl p-4 md:p-6',
+        hover && 'glass-hover cursor-pointer active:scale-[0.98]',
         glow === 'gold' && 'gold-glow',
         glow === 'crimson' && 'crimson-glow',
-        onClick && 'cursor-pointer',
+        onClick && 'cursor-pointer active:scale-[0.98]',
         className
       )}
       style={{

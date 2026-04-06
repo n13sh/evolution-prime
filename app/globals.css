@@ -59,16 +59,26 @@ body {
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(var(--blur-glass));
     -webkit-backdrop-filter: blur(var(--blur-glass));
+    @apply transition-all duration-300;
   }
 
   .glass-hover {
-    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    @apply transition-all duration-300;
   }
 
   .glass-hover:hover {
     background: var(--glass-hover);
-    border-color: rgba(255,255,255,0.12);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+    transform: translateY(-2px);
+  }
+
+  .card-view-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .mobile-card-stack {
+    @apply flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6;
   }
 
   .gold-glow {

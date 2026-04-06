@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Zap, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -16,31 +17,32 @@ export function NavBar() {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
-        background: scrolled ? 'rgba(10,10,15,0.9)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none',
+        background: scrolled ? 'rgba(5,5,10,0.85)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(24px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.08)' : 'none',
+        height: scrolled ? '72px' : '96px',
       }}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-gold rounded-lg flex items-center justify-center">
-            <Zap className="w-4 h-4 text-black" fill="black" />
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center transition-all duration-500 group-hover:rotate-[360deg] shadow-lg shadow-gold/10">
+            <Zap className="w-5 h-5 text-black" fill="black" />
           </div>
-          <span className="font-display font-bold text-lg tracking-tight">
-            Evolution<span className="text-gradient-gold">Prime</span>
+          <span className="font-display font-black text-2xl tracking-tighter uppercase">
+            Evolution<span className="text-gold italic">Prime</span>
           </span>
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8 text-sm text-[--text-muted]">
+        <div className="hidden md:flex items-center gap-10">
           {['Features', 'Pricing', 'Coaches', 'Community'].map(item => (
             <a
               key={item}
               href={`#${item.toLowerCase()}`}
-              className="hover:text-[--text-primary] transition-colors"
+              className="text-[10px] font-black uppercase tracking-[0.2em] text-[--text-muted]/60 hover:text-gold transition-all duration-300 relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[1px] after:bg-gold hover:after:w-full after:transition-all"
             >
               {item}
             </a>
@@ -48,41 +50,52 @@ export function NavBar() {
         </div>
 
         {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-6">
           <Link href="/auth">
-            <Button variant="ghost" size="sm">Sign In</Button>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[--text-muted]/60 hover:text-[--text-primary] transition-colors cursor-pointer">Sign In</span>
           </Link>
           <Link href="/auth?mode=register">
-            <Button variant="primary" size="sm">Get Started</Button>
+            <Button variant="primary" className="h-11 px-8 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-gold/10 hover:shadow-gold/20 transition-all duration-500">
+              Get Started
+            </Button>
           </Link>
         </div>
 
         {/* Mobile menu */}
         <button
-          className="md:hidden text-[--text-muted] hover:text-[--text-primary]"
+          className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl glass border border-white/10 text-gold"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Mobile dropdown */}
       {mobileOpen && (
-        <div className="md:hidden glass border-t border-[--glass-border] px-6 py-4 flex flex-col gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:hidden glass border-t border-white/10 px-8 py-10 flex flex-col gap-8 shadow-2xl"
+        >
           {['Features', 'Pricing', 'Coaches', 'Community'].map(item => (
             <a
               key={item}
               href={`#${item.toLowerCase()}`}
-              className="text-[--text-muted] hover:text-[--text-primary] transition-colors"
+              className="text-xs font-black uppercase tracking-[0.3em] text-[--text-muted] hover:text-gold transition-all"
               onClick={() => setMobileOpen(false)}
             >
               {item}
             </a>
           ))}
-          <Link href="/auth" onClick={() => setMobileOpen(false)}>
-            <Button variant="primary" className="w-full">Get Started Free</Button>
-          </Link>
-        </div>
+          <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
+            <Link href="/auth" onClick={() => setMobileOpen(false)}>
+               <Button variant="ghost" className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em]">Sign In</Button>
+            </Link>
+            <Link href="/auth?mode=register" onClick={() => setMobileOpen(false)}>
+              <Button variant="primary" className="w-full h-14 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-gold/10">Get Started Free</Button>
+            </Link>
+          </div>
+        </motion.div>
       )}
     </nav>
   );
