@@ -7,7 +7,7 @@ import { NavBar } from '@/components/landing/NavBar';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-surface-base overflow-hidden">
+    <main className="min-h-screen overflow-hidden">
       <NavBar />
       <HeroSection />
       <StatsSection />

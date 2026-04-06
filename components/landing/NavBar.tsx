@@ -2,12 +2,14 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Menu, X } from 'lucide-react';
+import { Zap, Menu, X, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useUIStore } from '@/store/ui-store';
 
 export function NavBar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { soundEnabled, toggleSound } = useUIStore();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -51,6 +53,13 @@ export function NavBar() {
 
         {/* CTA */}
         <div className="hidden md:flex items-center gap-6">
+          <button 
+            onClick={toggleSound}
+            className="w-10 h-10 flex items-center justify-center rounded-xl glass border border-white/10 text-gold hover:scale-110 transition-all duration-300"
+            title={soundEnabled ? 'Mute Sound' : 'Unmute Sound'}
+          >
+            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5 opacity-40" />}
+          </button>
           <Link href="/auth">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[--text-muted]/60 hover:text-[--text-primary] transition-colors cursor-pointer">Sign In</span>
           </Link>

@@ -11,9 +11,11 @@ interface Toast {
 interface UIState {
   sidebarOpen: boolean;
   activeModal: string | null;
+  soundEnabled: boolean;
   toasts: Toast[];
 
   toggleSidebar: () => void;
+  toggleSound: () => void;
   setSidebar: (open: boolean) => void;
   openModal: (id: string) => void;
   closeModal: () => void;
@@ -24,9 +26,11 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: false,
   activeModal: null,
+  soundEnabled: true,
   toasts: [],
 
   toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
+  toggleSound: () => set(state => ({ soundEnabled: !state.soundEnabled })),
   setSidebar: (open) => set({ sidebarOpen: open }),
   openModal: (id) => set({ activeModal: id }),
   closeModal: () => set({ activeModal: null }),

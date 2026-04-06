@@ -1,5 +1,7 @@
 'use client';
 import { cn } from '@/lib/utils/cn';
+import { useSFX } from '@/lib/hooks/useSFX';
+import { useUIStore } from '@/store/ui-store';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -10,11 +12,24 @@ interface GlassCardProps {
 }
 
 export function GlassCard({ children, className, glow, hover = false, onClick }: GlassCardProps) {
+  const { playSFX } = useSFX();
+  const { soundEnabled } = useUIStore();
+
+  const handleHover = () => {
+    if (soundEnabled && hover) playSFX('hover');
+  };
+
+  const handleClick = () => {
+    if (soundEnabled && (onClick || hover)) playSFX('click');
+    onClick?.();
+  };
+
   return (
     <div
-      onClick={onClick}
+      onMouseEnter={handleHover}
+      onClick={handleClick}
       className={cn(
-        'glass rounded-2xl md:rounded-3xl p-4 md:p-6',
+        'glass rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all duration-300',
         hover && 'glass-hover cursor-pointer active:scale-[0.98]',
         glow === 'gold' && 'gold-glow',
         glow === 'crimson' && 'crimson-glow',

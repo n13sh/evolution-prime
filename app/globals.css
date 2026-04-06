@@ -36,7 +36,7 @@ html {
 }
 
 body {
-  background-color: var(--bg-base);
+  background-color: transparent;
   color: var(--text-primary);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;

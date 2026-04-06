@@ -1,5 +1,7 @@
 'use client';
 import { cn } from '@/lib/utils/cn';
+import { useSFX } from '@/lib/hooks/useSFX';
+import { useUIStore } from '@/store/ui-store';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'crimson' | 'ghost' | 'outline';
@@ -8,7 +10,20 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
 }
 
-export function Button({ variant = 'primary', size = 'md', loading, className, children, disabled, ...props }: ButtonProps) {
+export function Button({ variant = 'primary', size = 'md', loading, className, children, disabled, onMouseEnter, onClick, ...props }: ButtonProps) {
+  const { playSFX } = useSFX();
+  const { soundEnabled } = useUIStore();
+
+  const handleHover = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (soundEnabled && !disabled && !loading) playSFX('hover');
+    onMouseEnter?.(e);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (soundEnabled && !disabled && !loading) playSFX('click');
+    onClick?.(e);
+  };
+
   const sizes = {
     sm: 'px-4 py-2 text-sm rounded-lg',
     md: 'px-6 py-3 text-sm rounded-xl',
@@ -24,6 +39,8 @@ export function Button({ variant = 'primary', size = 'md', loading, className, c
 
   return (
     <button
+      onMouseEnter={handleHover}
+      onClick={handleClick}
       className={cn(
         'inline-flex items-center justify-center gap-2 transition-all duration-200 font-medium select-none',
         sizes[size],

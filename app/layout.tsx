@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/shared/Toaster';
 
+import { RootClientLayout } from '@/components/layout/RootClientLayout';
+
 export const metadata: Metadata = {
   title: 'Evolution Prime — Crafting Leaders',
   description: 'The premium AI-driven fitness ecosystem for elite athletes, coaches, and champions.',
@@ -12,8 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        {children}
-        <Toaster />
+        <RootClientLayout>
+          {children}
+          <Toaster />
+        </RootClientLayout>
       </body>
     </html>
   );
