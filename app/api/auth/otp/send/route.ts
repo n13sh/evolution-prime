@@ -22,10 +22,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
+        // Not passing emailRedirectTo forces Supabase to send a 6-digit OTP
+        // instead of a magic link
+        data: { source: 'evoprime' },
       },
     });
 
