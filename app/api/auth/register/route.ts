@@ -28,7 +28,10 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const user = await createUser({ email, passwordHash, role, displayName });
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const user = await createUser({ email, passwordHash, role, displayName, verificationCode });
+
+    console.log(`[AUTH] OTP for ${email}: ${verificationCode}`); // Mock email sending
 
     if (role === 'coach') await createCoachProfile(user.id);
     else await createTraineeProfile(user.id);

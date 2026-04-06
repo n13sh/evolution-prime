@@ -26,7 +26,7 @@ export async function getMetricsHistory(
   return sql`SELECT * FROM body_metrics WHERE trainee_id = ${traineeId} ORDER BY measured_at ASC`;
 }
 
-export async function addBodyMetric(
+export async function createBodyMetric(
   traineeId: number,
   data: Partial<Omit<BodyMetric, 'id' | 'trainee_id' | 'measured_at'>>
 ): Promise<BodyMetric> {

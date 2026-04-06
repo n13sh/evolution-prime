@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
   display_name TEXT      NOT NULL,
   avatar_url   TEXT,
   is_active    INTEGER   NOT NULL DEFAULT 1,
+  is_verified  INTEGER   NOT NULL DEFAULT 0,
+  verification_code TEXT,
   created_at   BIGINT    NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT,
   updated_at   BIGINT    NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
 );
@@ -136,6 +138,38 @@ CREATE TABLE IF NOT EXISTS body_metrics (
 
 CREATE INDEX IF NOT EXISTS idx_metrics_trainee ON body_metrics(trainee_id);
 CREATE INDEX IF NOT EXISTS idx_metrics_date    ON body_metrics(measured_at);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      BIGINT    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_type    TEXT      NOT NULL DEFAULT 'free' 
+                 CHECK(plan_type IN ('free', 'moderate', 'pro')),
+  billing_cycle TEXT      NOT NULL DEFAULT 'monthly'
+                 CHECK(billing_cycle IN ('monthly', 'yearly')),
+  status       TEXT      NOT NULL DEFAULT 'pending' 
+                 CHECK(status IN ('pending', 'active', 'expired')),
+  amount       REAL      NOT NULL,
+  currency     TEXT      NOT NULL DEFAULT 'INR',
+  transaction_ref TEXT,
+  started_at   BIGINT    NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT,
+  expires_at   BIGINT,
+  created_at   BIGINT    NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
+);
+
+CREATE INDEX IF NOT EXISTS idx_sub_user ON subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id           BIGSERIAL PRIMARY KEY,
+  sender_id    BIGINT    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id  BIGINT    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content      TEXT      NOT NULL,
+  is_read      INTEGER   NOT NULL DEFAULT 0,
+  created_at   BIGINT    NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::BIGINT
+);
+
+CREATE INDEX IF NOT EXISTS idx_msg_sender   ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_msg_receiver ON messages(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_msg_created  ON messages(created_at);
 
 CREATE TABLE IF NOT EXISTS notifications (
   id         BIGSERIAL PRIMARY KEY,

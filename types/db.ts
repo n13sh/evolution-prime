@@ -8,6 +8,8 @@ export interface User {
   display_name: string;
   avatar_url: string | null;
   is_active: number;
+  is_verified: number;
+  verification_code: string | null;
   created_at: number;
   updated_at: number;
 }

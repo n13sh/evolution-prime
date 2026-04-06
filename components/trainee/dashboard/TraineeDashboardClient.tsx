@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Dumbbell, Flame, Target, TrendingUp, Calendar, Zap, ArrowRight, Trophy, Brain } from 'lucide-react';
+import { Dumbbell, Flame, Target, TrendingUp, Calendar, Zap, ArrowRight, Trophy, Brain, Sparkles, ShieldCheck } from 'lucide-react';
 import { TopBar } from '@/components/layout/TopBar';
 import { ProgressRing } from './ProgressRing';
 import { MetricCard } from './MetricCard';
@@ -17,12 +17,18 @@ interface Props {
   recentSessions: any[];
   activePlan: WorkoutPlan | null;
   traineeProfile: Trainee | null;
+  planType: 'free' | 'moderate' | 'pro';
+  isSubscribed: boolean;
 }
 
-export function TraineeDashboardClient({ user, metrics, recentSessions, activePlan, traineeProfile }: Props) {
+export function TraineeDashboardClient({ 
+  user, metrics, recentSessions, activePlan, traineeProfile, planType, isSubscribed 
+}: Props) {
   const today = new Date();
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const todayIndex = today.getDay();
+
+  const isFree = planType === 'free';
 
   // Mock progress for demo (would be real data)
   const calorieProgress = 78;
@@ -44,6 +50,30 @@ export function TraineeDashboardClient({ user, metrics, recentSessions, activePl
       />
 
       <div className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6 md:space-y-10">
+        
+        {/* Tier Indicator */}
+        {isFree && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/3 border border-white/5 rounded-2xl p-4 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-[--text-muted]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[--text-muted]">Evolution Path: Essential</p>
+                <p className="text-xs font-medium text-white/40">Upgrade to Elite or Legendary for AI Architect access.</p>
+              </div>
+            </div>
+            <Link href="/plans">
+              <Button variant="ghost" className="h-10 border-gold/20 text-gold text-[10px] font-black uppercase tracking-widest px-6 shadow-xl shadow-gold/5">
+                Scale Up
+              </Button>
+            </Link>
+          </motion.div>
+        )}
         {/* Hero Progress Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -232,18 +262,27 @@ export function TraineeDashboardClient({ user, metrics, recentSessions, activePl
               ) : (
                 <>
                   <div className="flex-1 flex flex-col items-center justify-center text-center py-10 space-y-6">
-                    <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center border border-white/5">
-                      <Brain className="w-10 h-10 text-[--text-muted]/40" />
+                    <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center border border-white/5 relative overflow-hidden group">
+                      <Brain className="w-10 h-10 text-[--text-muted]/40 group-hover:text-gold/40 transition-colors" />
+                      {isFree && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                           <ShieldCheck className="w-6 h-6 text-gold/60" />
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
-                       <p className="text-lg font-black text-[--text-primary] tracking-tight">No Plan Identified</p>
-                       <p className="text-sm text-[--text-muted]/60 max-w-[200px] mx-auto font-medium">Generate your personalized evolution path with AI Architect.</p>
+                       <p className="text-lg font-black text-[--text-primary] tracking-tight">AI Architect</p>
+                       <p className="text-sm text-[--text-muted]/60 max-w-[200px] mx-auto font-medium">
+                         {isFree 
+                           ? 'Upgrade to Elite to unlock autonomous plan generation.' 
+                           : 'Generate your personalized evolution path with AI Architect.'}
+                       </p>
                     </div>
                   </div>
-                  <Link href="/trainee/architect">
-                    <Button variant="primary" className="w-full h-14 gap-3 text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-gold/10">
-                      <Zap className="w-4 h-4 fill-current" />
-                      AI Architect
+                  <Link href={isFree ? "/plans" : "/trainee/architect"}>
+                    <Button variant={isFree ? "ghost" : "primary"} className="w-full h-14 gap-3 text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-gold/10">
+                      {isFree ? <Trophy className="w-4 h-4 text-gold" /> : <Zap className="w-4 h-4 fill-current" />}
+                      {isFree ? 'Scale Evolution' : 'AI Architect'}
                     </Button>
                   </Link>
                 </>

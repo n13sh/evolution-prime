@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSession } from '@/lib/auth/session';
-import { addBodyMetric, getMetricsHistory } from '@/lib/db/body-metrics';
+import { createBodyMetric, getMetricsHistory } from '@/lib/db/body-metrics';
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const session = await requireSession();
     if (session.role !== 'trainee') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     const data = await req.json();
-    const metric = await addBodyMetric(session.userId, data);
+    const metric = await createBodyMetric(session.userId, data);
     return NextResponse.json({ metric });
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

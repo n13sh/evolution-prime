@@ -19,14 +19,24 @@ export async function createUser(data: {
   passwordHash: string;
   role: string;
   displayName: string;
+  verificationCode?: string;
 }): Promise<User> {
   const sql = getDb();
   const rows = await sql<User[]>`
-    INSERT INTO users (email, password_hash, role, display_name)
-    VALUES (${data.email}, ${data.passwordHash}, ${data.role}, ${data.displayName})
+    INSERT INTO users (email, password_hash, role, display_name, verification_code)
+    VALUES (${data.email}, ${data.passwordHash}, ${data.role}, ${data.displayName}, ${data.verificationCode ?? null})
     RETURNING *
   `;
   return rows[0];
+}
+
+export async function verifyUser(id: number, code: string): Promise<boolean> {
+  const sql = getDb();
+  const user = await getUserById(id);
+  if (!user || user.verification_code !== code) return false;
+
+  await sql`UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ${id}`;
+  return true;
 }
 
 export async function getAllUsers(opts?: {

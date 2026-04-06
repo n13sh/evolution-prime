@@ -51,8 +51,16 @@ function AuthContent() {
         return;
       }
 
+      if (data.requiresVerification || mode === 'register') {
+        setUser(data.user);
+        const welcomeMsg = mode === 'register' ? 'Welcome to Evolution Prime' : 'Identity Verification Required';
+        pushToast({ type: 'info', title: welcomeMsg });
+        router.push('/auth/verify');
+        return;
+      }
+
       setUser(data.user);
-      pushToast({ type: 'success', title: `Welcome${mode === 'register' ? ' to Evolution Prime' : ' back'}, ${data.user.displayName}!` });
+      pushToast({ type: 'success', title: `Welcome back, ${data.user.displayName}!` });
 
       const redirect = searchParams.get('redirect');
       if (redirect) {
