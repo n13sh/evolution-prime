@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 import { getUserByEmail, getUserBySupabaseUid, createUser } from '@/lib/db/users';
 import { signToken } from '@/lib/auth/jwt';
 import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 const DEV_BYPASS_CODE = '884895';
-const hasSupabase = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,52 +14,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and OTP code are required' }, { status: 400 });
     }
 
-    let supabaseUid: string | null = null;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const hasSupabase = !!(supabaseUrl && supabaseKey);
 
-    // DEV BYPASS: allow code 884895 without Supabase
-    const isDevBypass = !hasSupabase || token === DEV_BYPASS_CODE;
-
-    if (isDevBypass) {
-      if (token !== DEV_BYPASS_CODE) {
-        return NextResponse.json({ error: 'Invalid access code' }, { status: 401 });
-      }
-      // Generate a deterministic fake UID for dev
-      supabaseUid = null;
+    // DEV BYPASS
+    if (token === DEV_BYPASS_CODE) {
+      console.log(`[EVOPRIME] Dev bypass used for ${email}`);
+    } else if (!hasSupabase) {
+      return NextResponse.json({ error: 'OTP service not configured' }, { status: 503 });
     } else {
-      // Real Supabase verification
-      const { data: { session }, error } = await supabase.auth.verifyOtp({
+      // Create a fresh Supabase client per request to avoid stale state
+      const supabase = createClient(supabaseUrl!, supabaseKey!);
+
+      // Try verifying as email OTP (6-digit code from signInWithOtp)
+      const { data, error } = await supabase.auth.verifyOtp({
         email,
         token,
         type: 'email',
       });
 
-      if (error || !session) {
-        return NextResponse.json({ error: error?.message || 'Invalid or expired code' }, { status: 401 });
-      }
+      console.log('[OTP Verify] data:', JSON.stringify(data), 'error:', JSON.stringify(error));
 
-      supabaseUid = session.user.id;
+      if (error) {
+        // If 'email' type fails, try 'magiclink' type as fallback
+        const { data: data2, error: error2 } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'magiclink',
+        });
+
+        if (error2) {
+          console.error('[OTP Verify] Both types failed:', error.message, error2.message);
+          return NextResponse.json({ 
+            error: `Invalid or expired code. ${error.message}` 
+          }, { status: 401 });
+        }
+
+        console.log('[OTP Verify] magiclink type succeeded');
+      }
     }
 
     // Sync with local users table
-    let user = supabaseUid ? await getUserBySupabaseUid(supabaseUid) : null;
+    let user = await getUserByEmail(email);
 
     if (!user) {
-      // Check by email (covers existing accounts + dev bypass)
-      user = await getUserByEmail(email);
-
-      if (!user) {
-        // Create new local profile
-        user = await createUser({
-          email,
-          role: role || 'trainee',
-          displayName: displayName || email.split('@')[0],
-          supabaseUid: supabaseUid ?? undefined,
-        });
-      }
+      user = await createUser({
+        email,
+        role: role || 'trainee',
+        displayName: displayName || email.split('@')[0],
+      });
     }
-
-    // Mark user as verified
-    // (existing migration already handles this, but ensure for new users)
 
     // Generate session JWT
     const localToken = await signToken({
@@ -76,7 +80,7 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return NextResponse.json({
@@ -89,8 +93,9 @@ export async function POST(req: NextRequest) {
         isVerified: user.is_verified,
       }
     });
+
   } catch (err: any) {
-    console.error('[OTP Verify Error]', err);
-    return NextResponse.json({ error: 'Verification failed. Please try again.' }, { status: 500 });
+    console.error('[OTP Verify Fatal Error]', err?.message || err);
+    return NextResponse.json({ error: err?.message || 'Verification failed. Please try again.' }, { status: 500 });
   }
 }
