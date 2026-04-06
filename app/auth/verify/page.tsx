@@ -1,13 +1,18 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Mail, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useSFX } from '@/lib/hooks/useSFX';
 
-export default function VerifyPage() {
+function VerifyContent() {
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email') || '';
+  const role = searchParams.get('role') || 'trainee';
+  const displayName = searchParams.get('name') || '';
+
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +61,10 @@ export default function VerifyPage() {
     playSFX('transition');
 
     try {
-      const res = await fetch('/api/auth/verify', {
+      const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: fullCode }),
+        body: JSON.stringify({ email, token: fullCode, role, displayName }),
       });
 
       const data = await res.json();
@@ -80,12 +85,23 @@ export default function VerifyPage() {
   const handleResend = async () => {
     if (timer > 0 || resending) return;
     setResending(true);
-    // In a real app, call resend API
-    setTimeout(() => {
-      setResending(false);
+    
+    try {
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      
+      if (!res.ok) throw new Error('Failed to dispatch signal');
+      
       setTimer(60);
       playSFX('success', 0.1);
-    }, 1000);
+    } catch (err) {
+      setError('Signal dispatch failed');
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -112,7 +128,7 @@ export default function VerifyPage() {
                 Verify Your <span className="text-gold">Evolution</span>
               </h1>
               <p className="text-sm text-[--text-muted] mb-10 leading-relaxed max-w-[280px] mx-auto uppercase tracking-widest font-bold">
-                We sent a 6-digit access code to your secure terminal.
+                Access code sent to <span className="text-white lowercase">{email}</span>. Use the neural key to enter.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-10">
@@ -148,7 +164,7 @@ export default function VerifyPage() {
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <>
-                      Secure Entrance
+                      Enter the Arena
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -162,7 +178,7 @@ export default function VerifyPage() {
                   className="group flex items-center justify-center gap-3 mx-auto text-[10px] font-black uppercase tracking-[0.2em] text-[--text-muted] hover:text-gold transition-colors disabled:opacity-40"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${resending ? 'animate-spin text-gold' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                  {timer > 0 ? `Resend Signal in ${timer}s` : 'Request New Signal'}
+                  {timer > 0 ? `Signal Cooldown: ${timer}s` : 'Dispatch New Signal'}
                 </button>
               </div>
             </GlassCard>
@@ -177,10 +193,22 @@ export default function VerifyPage() {
               <ShieldCheck className="w-12 h-12 text-black" />
             </div>
             <h2 className="font-display font-black text-4xl tracking-tighter uppercase mb-4">Identity <span className="text-gold">Secured</span></h2>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[--text-muted]">Initiating Bio-Metrics Sync...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[--text-muted]">Initiating Synapse Bridge...</p>
           </motion.div>
         )}
       </AnimatePresence>
     </main>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+       <div className="min-h-screen flex items-center justify-center">
+         <Loader2 className="w-8 h-8 text-gold animate-spin" />
+       </div>
+     }>
+      <VerifyContent />
+    </Suspense>
   );
 }

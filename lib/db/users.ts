@@ -8,6 +8,12 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
   return rows[0];
 }
 
+export async function getUserBySupabaseUid(uid: string): Promise<User | undefined> {
+  const sql = getDb();
+  const rows = await sql<User[]>`SELECT * FROM users WHERE supabase_uid = ${uid} LIMIT 1`;
+  return rows[0];
+}
+
 export async function getUserById(id: number): Promise<User | undefined> {
   const sql = getDb();
   const rows = await sql<User[]>`SELECT * FROM users WHERE id = ${id} LIMIT 1`;
@@ -16,15 +22,16 @@ export async function getUserById(id: number): Promise<User | undefined> {
 
 export async function createUser(data: {
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
   role: string;
   displayName: string;
+  supabaseUid?: string;
   verificationCode?: string;
 }): Promise<User> {
   const sql = getDb();
   const rows = await sql<User[]>`
-    INSERT INTO users (email, password_hash, role, display_name, verification_code)
-    VALUES (${data.email}, ${data.passwordHash}, ${data.role}, ${data.displayName}, ${data.verificationCode ?? null})
+    INSERT INTO users (email, password_hash, role, display_name, supabase_uid, verification_code)
+    VALUES (${data.email}, ${data.passwordHash ?? null}, ${data.role}, ${data.displayName}, ${data.supabaseUid ?? null}, ${data.verificationCode ?? null})
     RETURNING *
   `;
   return rows[0];

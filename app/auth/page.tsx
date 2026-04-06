@@ -32,45 +32,30 @@ function AuthContent() {
     setLoading(true);
 
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const body = mode === 'login'
-        ? { email: form.email, password: form.password }
-        : { email: form.email, password: form.password, displayName: form.displayName, role };
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email: form.email }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.errors) setErrors(data.errors);
-        else pushToast({ type: 'error', title: data.error || 'Authentication failed' });
+        pushToast({ type: 'error', title: data.error || 'Identity Challenge Failed' });
         return;
       }
 
-      if (data.requiresVerification || mode === 'register') {
-        setUser(data.user);
-        const welcomeMsg = mode === 'register' ? 'Welcome to Evolution Prime' : 'Identity Verification Required';
-        pushToast({ type: 'info', title: welcomeMsg });
-        router.push('/auth/verify');
-        return;
-      }
-
-      setUser(data.user);
-      pushToast({ type: 'success', title: `Welcome back, ${data.user.displayName}!` });
-
-      const redirect = searchParams.get('redirect');
-      if (redirect) {
-        router.push(redirect);
-      } else {
-        const dashboards = { admin: '/admin', coach: '/coach', trainee: '/trainee' };
-        router.push(dashboards[data.user.role as keyof typeof dashboards] || '/');
-      }
+      pushToast({ type: 'success', title: 'Neural Signal Sent (Check Email)' });
+      
+      // Store draft profile in session/query for verification step
+      const params = new URLSearchParams({
+        email: form.email,
+        role,
+        name: form.displayName || '',
+      });
+      router.push(`/auth/verify?${params.toString()}`);
     } catch {
-      pushToast({ type: 'error', title: 'Network error. Please try again.' });
+      pushToast({ type: 'error', title: 'Network sequence interrupted.' });
     } finally {
       setLoading(false);
     }
@@ -100,74 +85,23 @@ function AuthContent() {
             </span>
           </Link>
           <h1 className="font-display font-bold text-2xl text-[--text-primary] mb-1">
-            {mode === 'login' ? 'Welcome Back' : 'Start Your Evolution'}
+            {mode === 'login' ? 'Identity Authentication' : 'Begin Evolution'}
           </h1>
           <p className="text-sm text-[--text-muted]">
-            {mode === 'login' ? 'Sign in to continue your journey' : 'Create your account and join the elite'}
+            {mode === 'login' ? 'Secure entrance via neural signal' : 'Create your unique signature in the elite'}
           </p>
         </div>
 
         {/* Card */}
         <div
-          className="glass rounded-3xl p-8"
-          style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07)' }}
+          className="glass rounded-3xl p-8 shadow-2xl border-white/5"
         >
-          {/* Mode toggle */}
-          <div className="flex glass rounded-xl p-1 mb-6">
-            {(['login', 'register'] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                  mode === m
-                    ? 'bg-gold text-black'
-                    : 'text-[--text-muted] hover:text-[--text-primary]'
-                }`}
-              >
-                {m === 'login' ? 'Sign In' : 'Sign Up'}
-              </button>
-            ))}
-          </div>
-
-          {/* Role selector (register only) */}
-          <AnimatePresence>
-            {mode === 'register' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden mb-5"
-              >
-                <p className="text-xs text-[--text-muted] mb-2 font-medium">I am a...</p>
-                <div className="flex gap-3">
-                  {([
-                    { value: 'trainee', label: 'Athlete', emoji: '🏋️' },
-                    { value: 'coach', label: 'Coach', emoji: '🎯' },
-                  ] as const).map(r => (
-                    <button
-                      key={r.value}
-                      onClick={() => setRole(r.value)}
-                      className={`flex-1 glass py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        role === r.value
-                          ? 'border-gold/40 text-gold bg-gold/8'
-                          : 'text-[--text-muted] hover:text-[--text-primary]'
-                      }`}
-                    >
-                      <span className="mr-2">{r.emoji}</span>
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {mode === 'register' && (
               <Input
-                label="Full Name"
-                placeholder="Your name"
+                label="Signature (Name)"
+                placeholder="Ex: John Proto"
                 icon={<User className="w-4 h-4" />}
                 value={form.displayName}
                 onChange={e => setForm(p => ({ ...p, displayName: e.target.value }))}
@@ -176,44 +110,31 @@ function AuthContent() {
               />
             )}
             <Input
-              label="Email"
+              label="Neural ID (Email)"
               type="email"
-              placeholder="you@example.com"
+              placeholder="id@evolution.prime"
               icon={<Mail className="w-4 h-4" />}
               value={form.email}
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
               error={errors.email}
               required
             />
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[--text-muted]">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[--text-muted]" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={mode === 'register' ? 'Min. 8 characters' : '••••••••'}
-                  className="input-field pl-10 pr-10"
-                  value={form.password}
-                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                  required
-                  minLength={mode === 'register' ? 8 : undefined}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[--text-muted] hover:text-[--text-primary]"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {errors.password && <p className="text-xs text-crimson-light">{errors.password}</p>}
+
+            {/* Mode toggle embedded below for cleaner look */}
+            <div className="flex items-center justify-between px-1">
+              <button 
+                type="button" 
+                onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                className="text-[10px] font-black uppercase tracking-widest text-[--text-muted] hover:text-gold transition-colors"
+              >
+                {mode === 'login' ? 'No Signature? Register' : 'Already Linked? Login'}
+              </button>
             </div>
 
-            <Button type="submit" variant="primary" loading={loading} className="w-full mt-2">
-              {mode === 'login' ? 'Enter the Arena' : `Join as ${role === 'coach' ? 'Coach' : 'Athlete'}`}
+            <Button type="submit" variant="primary" loading={loading} className="w-full h-14 uppercase tracking-[0.2em] font-black shadow-gold/5">
+              {loading ? 'Dispatching Signal...' : 'Send Access Key'}
             </Button>
           </form>
-
         </div>
       </motion.div>
     </div>

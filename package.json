@@ -10,6 +10,7 @@
     "db:seed": "ts-node database/seed.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -28,13 +29,13 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.0.1",
-    "@eslint/eslintrc": "^3",
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
     "postcss": "^8",
