@@ -3,7 +3,7 @@ import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Mail, User } from 'lucide-react';
+import { Zap, Mail, User, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useUIStore } from '@/store/ui-store';
@@ -18,54 +18,95 @@ function AuthContent() {
     searchParams.get('role') === 'coach' ? 'coach' : 'trainee'
   );
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ email: '', displayName: '' });
+  const [form, setForm] = useState({ email: '', displayName: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const pushToast = useUIStore(s => s.pushToast);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-
-    if (!form.email) {
-      setErrors({ email: 'Email is required' });
+    if (!form.email || !form.password) {
+      setErrors({ email: !form.email ? 'Email required' : '', password: !form.password ? 'Password required' : '' });
       return;
     }
-    if (mode === 'register' && !form.displayName) {
-      setErrors({ displayName: 'Name is required' });
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.requiresVerification) {
+          pushToast({ type: 'warning', title: 'Verify your email first' });
+          handleSendOTP();
+          return;
+        }
+        pushToast({ type: 'error', title: data.error || 'Login failed' });
+        return;
+      }
+      pushToast({ type: 'success', title: 'Welcome back!' });
+      router.push(data.user.role === 'coach' ? '/coach' : '/trainee');
+    } catch {
+      pushToast({ type: 'error', title: 'Network error.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendOTP = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setErrors({});
+    if (!form.email) {
+      setErrors({ email: 'Email required' });
       return;
+    }
+    if (mode === 'register') {
+      if (!form.displayName) {
+        setErrors({ displayName: 'Name required' });
+        return;
+      }
+      if (!form.password || form.password.length < 6) {
+        setErrors({ password: 'Password must be at least 6 characters' });
+        return;
+      }
     }
 
     setLoading(true);
-
     try {
+      if (mode === 'register') {
+        sessionStorage.setItem('evo_reg_data', JSON.stringify({
+          password: form.password,
+        }));
+      }
+
       const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email }),
       });
-
       const data = await res.json();
 
       if (!res.ok) {
-        pushToast({ type: 'error', title: data.error || 'Failed to send access code' });
+        pushToast({ type: 'error', title: data.error || 'Failed to send OTP' });
         return;
       }
 
-      // Show hint for dev mode
       if (data.devMode) {
-        pushToast({ type: 'info', title: 'Dev Mode: Check your terminal for the access code' });
+        pushToast({ type: 'info', title: 'Dev Mode: Check terminal for access code' });
       } else {
-        pushToast({ type: 'success', title: '📨 Access code sent — check your email!' });
+        pushToast({ type: 'success', title: '📨 Access code sent to your email!' });
       }
 
       const params = new URLSearchParams({
         email: form.email,
-        role,
-        name: form.displayName || '',
+        role: mode === 'register' ? role : '',
+        name: mode === 'register' ? form.displayName : '',
       });
       router.push(`/auth/verify?${params.toString()}`);
     } catch {
-      pushToast({ type: 'error', title: 'Network error. Please try again.' });
+      pushToast({ type: 'error', title: 'Network error.' });
     } finally {
       setLoading(false);
     }
@@ -73,44 +114,37 @@ function AuthContent() {
 
   return (
     <div className="min-h-screen bg-surface-base flex items-center justify-center relative overflow-hidden px-4">
-      {/* Background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(245,197,24,0.06),transparent)]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold/4 rounded-full blur-[120px]" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md"
-      >
-        {/* Logo */}
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="relative w-full max-w-md my-10">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
             <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(245,197,24,0.3)]">
               <Zap className="w-5 h-5 text-black" fill="black" />
             </div>
-            <span className="font-display font-bold text-xl">
-              Evolution<span className="text-gradient-gold">Prime</span>
-            </span>
+            <span className="font-display font-bold text-xl">Evolution<span className="text-gradient-gold">Prime</span></span>
           </Link>
           <h1 className="font-display font-bold text-2xl text-[--text-primary] mb-1">
             {mode === 'login' ? 'Welcome Back' : 'Start Your Evolution'}
           </h1>
           <p className="text-sm text-[--text-muted]">
-            {mode === 'login' ? 'Enter your email to receive an access code' : 'Create your account — no password needed'}
+            {mode === 'login' ? 'Sign in to access your dashboard' : 'Create an account to begin'}
           </p>
         </div>
 
-        {/* Card */}
         <div className="glass rounded-3xl p-8 shadow-[0_24px_80px_rgba(0,0,0,0.6)] border border-white/5">
-          {/* Mode Toggle */}
           <div className="flex glass rounded-xl p-1 mb-6">
             {(['login', 'register'] as const).map(m => (
               <button
                 key={m}
                 type="button"
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  setMode(m);
+                  setErrors({});
+                }}
                 className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
                   mode === m ? 'bg-gold text-black' : 'text-[--text-muted] hover:text-[--text-primary]'
                 }`}
@@ -120,7 +154,6 @@ function AuthContent() {
             ))}
           </div>
 
-          {/* Role Selector (register only) */}
           <AnimatePresence>
             {mode === 'register' && (
               <motion.div
@@ -154,8 +187,7 @@ function AuthContent() {
             )}
           </AnimatePresence>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={mode === 'login' ? handlePasswordLogin : handleSendOTP} className="flex flex-col gap-4">
             {mode === 'register' && (
               <Input
                 label="Full Name"
@@ -164,7 +196,6 @@ function AuthContent() {
                 value={form.displayName}
                 onChange={e => setForm(p => ({ ...p, displayName: e.target.value }))}
                 error={errors.displayName}
-                required
               />
             )}
             <Input
@@ -175,22 +206,38 @@ function AuthContent() {
               value={form.email}
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
               error={errors.email}
-              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              icon={<KeyRound className="w-4 h-4" />}
+              value={form.password}
+              onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+              error={errors.password}
             />
 
-            <Button
-              type="submit"
-              variant="primary"
-              loading={loading}
-              className="w-full h-14 mt-1 font-black uppercase tracking-[0.15em] shadow-xl shadow-gold/10"
-            >
-              {loading ? 'Sending Code...' : mode === 'login' ? '→ Send Access Code' : `→ Register as ${role === 'coach' ? 'Coach' : 'Athlete'}`}
-            </Button>
+            {mode === 'login' ? (
+              <div className="flex flex-col gap-3 mt-2">
+                <Button type="submit" variant="primary" loading={loading} className="w-full h-12 uppercase tracking-[0.1em] font-bold">
+                  Login with Password
+                </Button>
+                <Button type="button" onClick={handleSendOTP} variant="outline" disabled={loading} className="w-full h-12 uppercase tracking-[0.1em] font-bold border-gold/20 text-gold hover:bg-gold/10">
+                  Send OTP Instead
+                </Button>
+              </div>
+            ) : (
+              <Button type="submit" variant="primary" loading={loading} className="w-full h-12 mt-2 font-black uppercase tracking-[0.15em] shadow-xl shadow-gold/10">
+                Register & Verify Email
+              </Button>
+            )}
           </form>
-
-          <p className="text-center mt-5 text-[10px] text-[--text-muted] font-medium">
-            A 6-digit code will be sent to your email.
-          </p>
+          
+          {mode === 'register' && (
+            <p className="text-center mt-5 text-[10px] text-[--text-muted] font-medium leading-relaxed">
+              For your security, we require email verification via OTP before your account is fully created.
+            </p>
+          )}
         </div>
       </motion.div>
     </div>

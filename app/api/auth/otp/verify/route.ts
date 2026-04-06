@@ -8,7 +8,7 @@ const DEV_BYPASS_CODE = '884895';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, token, role, displayName } = await req.json();
+    const { email, token, role, displayName, password } = await req.json();
 
     if (!email || !token) {
       return NextResponse.json({ error: 'Email and OTP code are required' }, { status: 400 });
@@ -59,10 +59,14 @@ export async function POST(req: NextRequest) {
     let user = await getUserByEmail(email);
 
     if (!user) {
+      const { hashPassword } = await import('@/lib/auth/password');
+      const passwordHash = password ? await hashPassword(password) : undefined;
+      
       user = await createUser({
         email,
         role: role || 'trainee',
         displayName: displayName || email.split('@')[0],
+        passwordHash,
       });
     }
 

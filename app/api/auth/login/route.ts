@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await getUserByEmail(email);
-    if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (!user || !user.password_hash) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     if (!user.is_active) return NextResponse.json({ error: 'Account suspended' }, { status: 403 });
     
     const valid = await comparePassword(password, user.password_hash);

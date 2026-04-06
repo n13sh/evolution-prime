@@ -67,10 +67,11 @@ function VerifyContent() {
     playSFX('transition');
 
     try {
+      const regData = JSON.parse(sessionStorage.getItem('evo_reg_data') || '{}');
       const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token: fullCode, role, displayName }),
+        body: JSON.stringify({ email, token: fullCode, role, displayName, password: regData.password }),
       });
 
       const data = await res.json();

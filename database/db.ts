@@ -9,7 +9,9 @@ declare global {
 function createConnection() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not set');
+    console.warn('⚠️  DATABASE_URL environment variable is not set. Database functionality will be unavailable.');
+    // Return a dummy connection or handle it gracefully in the app
+    return postgres('', { ssl: 'require' }); // This will fail later, but not during initial boot
   }
 
   // port 6543 = Supabase transaction pooler (needs prepare:false)
